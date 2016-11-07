@@ -1,0 +1,41 @@
+%sql 
+
+SELECT DISTINCT
+  ln_nbr,
+   description,
+  item_id,
+  SUM(amt) as amt
+FROM (SELECT DISTINCT
+        sc755_dtl_ln_nbr                        AS ln_nbr,
+        sc755_dtl_item_id                       AS item_id,
+        CASE WHEN sc755_dtl_item_id IN ('2-01', '2-02', '2-03', '2-04', '2-05', '2-07',
+                                                '3-01', '3-02', '3-03', '3-04', '3-11', '3-21', '3-31', '9-01',
+                                        '9-02', '10-0', '11-01')
+          THEN SUM(stat_amt)
+        ELSE Round(SUM(stat_amt) / 1000, 0) END AS amt,
+        st_abrv,
+        x.code_valu_3 AS description
+      FROM r1_table2 t, xlat_table x
+      WHERE 1 = 1
+            AND rpt_mo = ${rpt_mo=1,1|2|3|4|5|6|8|9|10|11|12}
+            AND rpt_yr = ${rpt_yr=2016, 2016|2015|2014}
+            AND cast(t.sc755_dtl_ln_nbr as int)=x.code_valu and sc755_dtl_ln_nbr is not null and sc755_dtl_ln_nbr !='\\N'
+      GROUP BY sc755_dtl_item_id, sc755_dtl_ln_nbr, st_abrv, x.code_valu_3
+      
+      UNION ALL 
+      
+      SELECT DISTINCT
+                  sc755_prim_ln_nbr                       AS ln_nbr,
+                  sc755_prim_item_id                      AS item_id,
+                  CASE WHEN sc755_prim_item_id IN ('2-01', '2-02', '2-03', '2-04', '2-05', '2-07','3-01', '3-02', '3-03', '3-04', '3-11', '3-21', '3-31', '9-01','9-02', '10-0', '11-01')
+                    THEN SUM(stat_amt)
+                  ELSE Round(SUM(stat_amt) / 1000, 0) END AS amt,
+                  st_abrv, x.code_valu_3 as description
+                FROM r1_table2 t, xlat_table x
+                WHERE sc755_prim_ln_nbr != sc755_dtl_ln_nbr
+                      AND rpt_mo = ${rpt_mo=1,1|2|3|4|5|6|8|9|10|11|12}
+            AND rpt_yr = ${rpt_yr=2016, 2016|2015|2014}
+            and cast(t.sc755_prim_ln_nbr as int)=x.code_valu and sc755_prim_ln_nbr is not null and sc755_prim_ln_nbr !='\\N'
+                GROUP BY sc755_prim_item_id, sc755_prim_ln_nbr, st_abrv, x.code_valu_3) query
+                where description is not null and description <> 'null'
+                Group by ln_nbr, item_id, description Order by cast(ln_nbr as int) 
