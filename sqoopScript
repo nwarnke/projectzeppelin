@@ -1,0 +1,9 @@
+ sqoop import 
+--connect jdbc:oracle:thin:@prod311.oracle.uprr.com:1521:prod311 
+--table FTM.FTM_OPS_EQMT_STAT_R1  
+--target-dir /user/dftm012/FTM_OPS_EQMT_STAT_R1 
+--username '' -password-file /user/... /*Redacted*/
+ --fields-terminated-by '|' 
+ --hive-import 
+ --hive-overwrite 
+ --hive-table prftm.FTM_OPS_EQMT_STAT_R1
