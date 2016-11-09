@@ -1,41 +1,66 @@
-%sql 
-
-SELECT DISTINCT
-  ln_nbr,
+%sql
+--Sc755-HDP version --working version
+with r1 as (SELECT DISTINCT
+  cast(ln_nbr as int),
    description,
-  item_id,
-  SUM(amt) as amt
-FROM (SELECT DISTINCT
+  item_id, cast(code_seq as int) as code_seq,
+  SUM(amt) as amt -- to change to ROUND(SUM(amt),2)
+FROM (SELECT DISTINCT --this is the first portion of the UNION in original code. the second portion was to get the sum for lines with 'TOTAL' which is replaced with code below [1] and [2]. In HDP's r1_table, there's no result for second portion
         sc755_dtl_ln_nbr                        AS ln_nbr,
         sc755_dtl_item_id                       AS item_id,
-        CASE WHEN sc755_dtl_item_id IN ('2-01', '2-02', '2-03', '2-04', '2-05', '2-07',
-                                                '3-01', '3-02', '3-03', '3-04', '3-11', '3-21', '3-31', '9-01',
-                                        '9-02', '10-0', '11-01')
+        CASE WHEN sc755_dtl_item_id IN ('2-01', '2-02', '2-03', '2-04', '2-05', '2-07', '3-01', '3-02', '3-03', '3-04', '3-11', '3-21', '3-31', '9-01','9-02', '10-0', '11-01')
           THEN SUM(stat_amt)
-        ELSE Round(SUM(stat_amt) / 1000, 0) END AS amt,
+        ELSE Round(SUM(stat_amt) / 1000, 0) END AS amt, --to change to ELSE SUM(stat_amt)/1000 END AS amt
         st_abrv,
-        x.code_valu_3 AS description
-      FROM r1_table2 t, xlat_table x
-      WHERE 1 = 1
-            AND rpt_mo = ${rpt_mo=1,1|2|3|4|5|6|8|9|10|11|12}
+        x.code_valu_3 AS description, x.code_seq
+      FROM xlat_table x, r1_table t -->change to r1_table2 for PROD311 r1 table
+      WHERE cast(t.sc755_dtl_ln_nbr as int)=x.code_valu and x.code_1='R1LNNBR' AND  sc755_dtl_ln_nbr is not null and sc755_dtl_ln_nbr !='\\N'  and sc755_dtl_item_id=x.code_valu_2
+        and rpt_mo = ${rpt_mo=1,1|2|3|4|5|6|8|9|10|11|12}
             AND rpt_yr = ${rpt_yr=2016, 2016|2015|2014}
-            AND cast(t.sc755_dtl_ln_nbr as int)=x.code_valu and sc755_dtl_ln_nbr is not null and sc755_dtl_ln_nbr !='\\N'
-      GROUP BY sc755_dtl_item_id, sc755_dtl_ln_nbr, st_abrv, x.code_valu_3
-      
-      UNION ALL 
-      
-      SELECT DISTINCT
-                  sc755_prim_ln_nbr                       AS ln_nbr,
-                  sc755_prim_item_id                      AS item_id,
-                  CASE WHEN sc755_prim_item_id IN ('2-01', '2-02', '2-03', '2-04', '2-05', '2-07','3-01', '3-02', '3-03', '3-04', '3-11', '3-21', '3-31', '9-01','9-02', '10-0', '11-01')
-                    THEN SUM(stat_amt)
-                  ELSE Round(SUM(stat_amt) / 1000, 0) END AS amt,
-                  st_abrv, x.code_valu_3 as description
-                FROM r1_table2 t, xlat_table x
-                WHERE sc755_prim_ln_nbr != sc755_dtl_ln_nbr
-                      AND rpt_mo = ${rpt_mo=1,1|2|3|4|5|6|8|9|10|11|12}
-            AND rpt_yr = ${rpt_yr=2016, 2016|2015|2014}
-            and cast(t.sc755_prim_ln_nbr as int)=x.code_valu and sc755_prim_ln_nbr is not null and sc755_prim_ln_nbr !='\\N'
-                GROUP BY sc755_prim_item_id, sc755_prim_ln_nbr, st_abrv, x.code_valu_3) query
-                where description is not null and description <> 'null'
-                Group by ln_nbr, item_id, description Order by cast(ln_nbr as int) 
+         GROUP BY sc755_dtl_item_id, sc755_dtl_ln_nbr, st_abrv, x.code_valu_3,code_seq
+) query
+Group by ln_nbr, item_id, description,code_seq order by ln_nbr )
+select ln_nbr, CONCAT (item_id, ' ', description) as line_desc, amt from (
+-- [1] to get TOTAL lines - sum of some lines
+select ln_nbr, x.code_valu_3 as description, x.code_valu_2 as item_id, x.code_seq as code_seq, ROUND(sum(sub_total),0) as amt from (
+select case when  r1.ln_nbr in (2,3,4) then 5 
+when r1.ln_nbr in (8,9,10) then 11
+when r1.ln_nbr between 15 and 29 then 30
+when r1.ln_nbr between 31 and 45 then 46
+when r1.ln_nbr between 47 and 63 then 64
+when r1.ln_nbr between 65 and 81 then 82
+when r1.ln_nbr between 85 and 87 then 88
+when r1.ln_nbr between 98 and 103 then 104
+when r1.ln_nbr between 105 and 106 then 107
+when r1.ln_nbr between 108 and 109 then 110
+when r1.ln_nbr between 111 and 112 then 113
+when r1.ln_nbr between 126 and 128 then 129
+when r1.ln_nbr between 130 and 132 then 133 else '9999'
+end as ln_nbr,
+amt as sub_total
+from r1 ) t , xlat_table x
+WHERE x.code_1='R1LNNBR' and  ln_nbr!='9999' and ln_nbr=x.code_valu
+group by t.ln_nbr,x.code_valu_3, x.code_valu_2, x.code_seq
+
+UNION
+--[2]TOTAL lines with overlap line nbr
+select ln_nbr, x.code_valu_3 as description, x.code_valu_2 as item_id, x.code_seq, sum(sub_total) as amt from (
+select case when r1.ln_nbr in (2,3,4,6) then 7
+when r1.ln_nbr in (8,9,10,12,13) then  14
+when r1.ln_nbr in (108,109,111,112) then 114
+else '9999'
+end as ln_nbr,
+amt as sub_total
+from r1 ) t , xlat_table x
+WHERE x.code_1='R1LNNBR' and  ln_nbr!='9999' and ln_nbr=x.code_valu
+group by t.ln_nbr,x.code_valu_3, x.code_valu_2, x.code_seq
+
+UNION
+--[3]to get rows that resemble labels n total
+select cast(code_valu as int) as ln_nbr, code_valu_3 as description, case when code_valu_2='null' then '' else code_valu_2 end as item_id, code_seq, 0 as amt 
+from xlat_table where code_1='R1LNNBR' and (code_valu_3 like 'TOTAL%' or code_valu_2 like '%.' or code_valu_2 is null or code_valu_2='null') and code_valu_3 not like '%(lines%' 
+
+UNION
+--[4]to get previous results saved as r1
+select * from r1
+) main_tbl order by cast(ln_nbr as int), code_seq
