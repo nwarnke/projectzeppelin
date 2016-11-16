@@ -1,0 +1,44 @@
+val r1Table = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/r1_table_2/*") //dev data. For test use: 
+val r1Table2 = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/ftm_ops_eqmt_stat_r1/*") 
+val xlatTable = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/ftm_code_xlat/*")
+
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
+val r1SchemaString = "sc931_ln_nbr sc755_prim_ln_nbr sc755_prim_item_id sc755_dtl_ln_nbr sc755_dtl_item_id st_abrv stat_amt r1_train_type rpt_yr rpt_mo rpt_dt"
+val r1SchemaString2 = "ftm_ops_eqmt_stat_r1_id sc931_ln_nbr sc755_prim_ln_nbr sc755_prim_item_id sc755_dtl_ln_nbr sc755_dtl_item_id r1_trn_type st_abrv stat_amt crtn_user_id crtn_tmst last_uptd_tmst last_uptd_user_id rpt_yr rpt_mo rpt_dt"
+
+val xlatSchemaString = "code_type code_seq code_1 code_2 code_3 code_valu code_valu_2 code_valu_3 code_desc last_uptd_dt last_uptd_by_id"
+
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql._
+
+val r1Schema = StructType(r1SchemaString.split(" ").map(fieldName ⇒ StructField(fieldName, StringType, true)))
+val r1Schema2 = StructType(r1SchemaString2.split(" ").map(fieldName ⇒ StructField(fieldName, StringType, true)))
+val r1RowRDD = r1Table.map(_.split("\\|")).map(e ⇒ Row(e(0),e(1),e(2),e(3),e(4),e(5),e(6),e(7),e(8),e(9),e(10)))
+val r1RowRDD2 = r1Table2.map(_.split("\\|")).map(e ⇒ Row(e(0),e(1),e(2),e(3),e(4),e(5),e(6),e(7),e(8),e(9),e(10),e(11), e(12), e(13), e(14),e(15)))
+val xlatSchema = StructType(xlatSchemaString.split(" ").map(fieldName ⇒ StructField(fieldName, StringType, true)))
+val xlatRowRDD = xlatTable.map(_.split("\\|")).filter(s=>s(0)=="TRNOPER").map(e ⇒ Row(e(0),e(1),e(2),e(3),e(4),e(5),e(6),e(7),e(8),e(9),e(10)))
+
+//create data frame
+val r1TableDF = sqlContext.createDataFrame(r1RowRDD, r1Schema)
+r1TableDF.cache()
+r1TableDF.registerTempTable("r1_table")
+
+val r1TableDF2 = sqlContext.createDataFrame(r1RowRDD2, r1Schema2)
+r1TableDF2.cache()
+r1TableDF2.registerTempTable("r1_table2")
+
+val xlatTableDF = sqlContext.createDataFrame(xlatRowRDD, xlatSchema)
+xlatTableDF.cache()
+xlatTableDF.registerTempTable("xlat_table")
+
+%sql
+select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28)
+then ROUND(SUM(stat_amt/1000),0) 
+else SUM(stat_amt)  end as amt  
+from r1_table2 t, xlat_table x
+where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo ="${rpt_mo=1,1|2|3|4|5|6|7|8|9|10|11|12}"
+and rpt_yr = "${rpt_yr=2016,2016|2015|2014}" and st_abrv = "${st_abrv=AR,AR|AZ|CA|CO|IA|ID|IL|IN|KS|KY|LA|MN|MO|NE|NM|NV|OK|OR|TN|TX|UT|WA|WI|WY|ALL STATES|SUM STATES}"
+group by st_abrv, sc931_ln_nbr, x.code_valu_2  order by st_abrv, cast(ln_nbr as int)
