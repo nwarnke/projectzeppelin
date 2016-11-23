@@ -1,3 +1,52 @@
+%angular
+<style>
+@keyframes bounce {
+	0%, 20%, 60%, 100% {
+		-webkit-transform: translateY(0);
+		transform: translateY(0);
+	}
+
+	40% {
+		-webkit-transform: translateY(-60px);
+		transform: translateY(-40px);
+	}
+
+	80% {
+		-webkit-transform: translateY(-40px);
+		transform: translateY(-20px);
+	}
+}
+
+
+.move:hover{
+    
+    animation: bounce 1s;
+}
+.move  {
+    width: 650px;
+    height: 50px;
+    float:Right;
+    font-size:100px;
+}
+
+.test:hover {
+    width: 650px;
+    height: 300px;
+    -webkit-transform: rotate(360deg); /* Safari */
+    transform: rotate(360deg);
+}
+</style>
+  <div  style="background-color:gold; height:40px"></div>
+    <div  style="background-color:red; height:20px"></div>
+</div>
+<div style="border-radius:25px;background-color:red"></div>
+<p class="move" ><b>Zeppelin PoC</b></p>
+<img src="http://img13.deviantart.net/6ba2/i/2013/036/0/a/union_pacific_deltic_by_ajf3440-d5txy35.png"/>
+
+    <div  style="background-color:red; height:20px"></div>
+      <div  style="background-color:gold; height:40px"></div>
+      
+      
 val r1Table = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/r1_table_2/*") //dev data. For test use: 
 val r1Table2 = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/ftm_ops_eqmt_stat_r1/*") 
 val xlatTable = sc.textFile("hdfs://omdxp125f5.uprr.com:8020/apps/hive/warehouse/prftm.db/ftm_code_xlat/*")
@@ -34,40 +83,94 @@ val xlatTableDF = sqlContext.createDataFrame(xlatRowRDD, xlatSchema)
 xlatTableDF.cache()
 xlatTableDF.registerTempTable("xlat_table")
 
-Select Query Parameters :
+Please Fill out the parameters
 
-val month = z.select("Month", Seq(("1","January"),("2","February"),("3","March"), ("4","April"), ("5","May"),("6","June"),
-                                    ("7","July"), ("8","August"), ("9","September"),("10","October"),("11","November"),("12","December")))
-val year = z.select("Year", Seq(("2015", "2015"),("2016","2016"),("2017","2017")))
-val state = z.select("State", Seq(("AR", "Arkansas"),("AZ","Arizona"),("CA","California"),("IA","Iowa"),("ID","Idaho"),("IL","Illinois"),("IN","Indiana"),("KS","Kansas"),("KY"
-,"Kentucky"),("LA","Louisiana"),("MN","Minnesota"),("MD","Maryland"),("NE","Nebraska"),("NM","New Mexico"),("NV","Nevada"),("OK","Oklahoma"),("OR","Oregon"),("TN","Tennessee"),("TX"
-,"Texas"),("UT","Utah"),("WA","Washington"),("WI","Wisconsin"),("WY","Wyoming"),("ALL","All States"),("SUM","Sum States")))
+
+%angular
+<form class="form-inline" >
+    <div class="form-group" style="float:Center">
+    <label for="month">Month: </label> <select  id="month" ng-model="month">
+      <option value=1>January</option>
+      <option value=2>February</option>
+      <option value=3>March</option>
+      <option value=4>April</option>
+      <option value=5>May</option>
+      <option value=6>June</option>
+      <option value=7>July</option>
+      <option value=8>August</option>
+      <option value=9>September</option>
+      <option value=10>October</option>
+      <option value=11>November</option>
+      <option value=12>December</option>
+    </select>&nbsp;&nbsp&nbsp;
+    
+     <label for="year">Year: </label> <select  id="year" ng-model="year">
+      <option value=2015>2015</option>
+      <option value=2016>2016</option>
+      <option value=2017>2017</option>
+    </select>&nbsp;&nbsp&nbsp; 
+    
+     <label for="state">State: </label> <select  id="state" ng-model="state">
+      <option value="AR">Arkansas</option>
+      <option value="AZ">Arizona</option>
+      <option value="CA">California</option>
+      <option value="IA">Iowa</option>
+      <option value="ID">Idaho</option>
+      <option value="IL">Illinois</option>
+      <option value="IN">Indiana</option>
+      <option value="KS">Kansas</option>
+      <option value="KY">Kentucky</option>
+      <option value="LA">Louisiana</option>
+      <option value="MN">Minnesota</option>
+      <option value="MD">Maryland</option>
+      <option value="NE">Nebraska</option>
+      <option value="NM">New Mexico</option>
+      <option value="NV">Nevada</option>
+      <option value="OK">Oklahoma</option>
+      <option value="OR">Oregon</option>
+      <option value="TN">Tennessee</option>
+      <option value="TX">Texas</option>
+      <option value="UT">Utah</option>
+      <option value="WA">Washington</option>
+      <option value="WI">Wisconsin</option>
+      <option value="WY">Wyoming</option>
+      <option value="ALL">All State</option>
+      <option value="SUM">Sum States</option>
+    </select>&nbsp;&nbsp&nbsp;
+    </div>
+    <button type="submit" class="btn btn-primary" ng-click="z.angularBind('month',month,'20161118-182556_452815265');z.angularBind('year',year,'20161118-182556_452815265');z.angularBind('state',state,'20161118-182556_452815265');z.runParagraph('20161118
+-182556_452815265');z.runParagraph('20161123-121337_974514218')">Submit</button>
+</form>    
+Decision based creation of SC931 Dataframe
 
-Creation of SC931 Dataframe
-
-val sc931_default = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24
-,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  from r1_table2 t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1='SC931NBR' 
-and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo =${rpt_mo} and rpt_yr = ${rpt_yr=2016,2016|2015|2014} and st_abrv = ${st_abrv} group by st_abrv, sc931_ln_nbr, x
+val mo =z.angular("month")
+val yr =z.angular("year")
+val stateAbv =z.angular("state")
+val sc931_default = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  
+from r1_table t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo= " +mo+ " and rpt_yr =" +yr+ " and st_abrv ='"+stateAbv +"' group by st_abrv, sc931_ln_nbr, x
 .code_valu_2  order by st_abrv, cast(ln_nbr as int)"
-val sc931_All_State = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23
-,24,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  from r1_table2 t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1
-='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo =${rpt_mo} and rpt_yr = ${rpt_yr=2016,2016|2015|2014} group by st_abrv, sc931_ln_nbr, x.code_valu_2  
-order by st_abrv, cast(ln_nbr as int)"
-val sc931_Sum_State = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23
-,24,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  from r1_table2 t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1
-='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo =${rpt_mo} and rpt_yr = ${rpt_yr=2016,2016|2015|2014} group by st_abrv, sc931_ln_nbr, x.code_valu_2  
-order by st_abrv, cast(ln_nbr as int)"
-val finalQuery = null
-if(state === "ALL"){
-    finalQuery = sc931_default
-}else if(state == "SUM"){
-   finalQuery = sc931_All_State
-}else{
-    finalQuery = sc931_Sum_State
-}
-val sc931DF = sqlContext.sql(finalQuery)
-sc931DF.cache()
+val sc931_All_State = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  
+from r1_table t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo= " +mo+ " and rpt_yr =" +yr+ " group by st_abrv, sc931_ln_nbr, x.code_valu_2  order by st_abrv, 
+cast(ln_nbr as int)"
+val sc931_Sum_State = "select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28) then ROUND(SUM(stat_amt/1000),0) else SUM(stat_amt)  end as amt  
+from r1_table t, xlat_table x where cast(t.sc931_ln_nbr as int)=x.code_valu and x.code_1='SC931NBR' and sc931_ln_nbr is not null and sc931_ln_nbr !='\\N' and rpt_mo= " +mo+ " and rpt_yr =" +yr+ " group by st_abrv, sc931_ln_nbr, x.code_valu_2  order by st_abrv, 
+cast(ln_nbr as int)"
+if(stateAbv == "ALL"){
+    val sc931DF = sqlContext.sql(sc931_All_State)
+    sc931DF.cache()
 sc931DF.registerTempTable("sc931_table")
+}else if(stateAbv == "SUM"){
+   val sc931DF = sqlContext.sql(sc931_Sum_State) 
+   sc931DF.cache()
+sc931DF.registerTempTable("sc931_table")
+}else{
+   val sc931DF = sqlContext.sql(sc931_default) 
+   sc931DF.cache()
+sc931DF.registerTempTable("sc931_table")
+}
+
+%sql
+select * from sc931_table
 
 %sql
 select distinct sc931_ln_nbr as ln_nbr,x.code_valu_2 as description, st_abrv, case when cast(t.sc931_ln_nbr as int) in (12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28)
