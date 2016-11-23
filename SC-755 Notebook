@@ -1,5 +1,50 @@
-%md
-<p style = "font-weight: bold;  font-size:45px">R1 SC-755</p>
+%angular
+<style>
+@keyframes bounce {
+	0%, 20%, 60%, 100% {
+		-webkit-transform: translateY(0);
+		transform: translateY(0);
+	}
+
+	40% {
+		-webkit-transform: translateY(-60px);
+		transform: translateY(-40px);
+	}
+
+	80% {
+		-webkit-transform: translateY(-40px);
+		transform: translateY(-20px);
+	}
+}
+
+
+.move:hover{
+    
+    animation: bounce 1s;
+}
+.move  {
+    width: 650px;
+    height: 50px;
+    float:Right;
+    font-size:100px;
+}
+
+.test:hover {
+    width: 650px;
+    height: 300px;
+    -webkit-transform: rotate(360deg); /* Safari */
+    transform: rotate(360deg);
+}
+</style>
+  <div  style="background-color:gold; height:30px"></div>
+    <div  style="background-color:red; height:10px"></div>
+</div>
+<div style="border-radius:25px;background-color:red"></div>
+<p class="move" ><b>R1:CS-755</b></p>
+<img src="http://img13.deviantart.net/6ba2/i/2013/036/0/a/union_pacific_deltic_by_ajf3440-d5txy35.png"/>
+
+    <div  style="background-color:red; height:10px"></div>
+      <div  style="background-color:gold; height:30px"></div>
 
 Creation of Xlat and R1 Data Frames
 
