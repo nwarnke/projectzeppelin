@@ -5,7 +5,7 @@ CREATE INDEX r1_rpt_mo_index ON TABLE ftm_ops_eqmt_stat_r1(rpt_mo)
 AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler';
 
 
-CREATE TABLE r1_table2(ftm_ops_eqmt_stat_r1_id	double,	
+CREATE TABLE ftm_ops_eqmt_stat_r1_partitioned(ftm_ops_eqmt_stat_r1_id	double,	
 sc931_ln_nbr	double,	
 sc755_prim_ln_nbr	double,	
 sc755_prim_item_id	string,	
@@ -17,16 +17,16 @@ crtn_user_id	string,
 crtn_tmst	string,	
 last_uptd_tmst	string,	
 last_uptd_user_id	string,	
-rpt_yr	double,		
+rpt_yr	int,		
 rpt_dt	string)
 PARTITIONED BY(rpt_mo INT, st_abrv STRING)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
-STORED AS SEQUENCEFILE;
+STORED AS TEXTFILE;
 
 set hive.execution.engine=tez;
 set tez.queue.name=long-running;
 
-INSERT INTO TABLE r1_table2 PARTITION (rpt_mo, st_abrv) select ftm_ops_eqmt_stat_r1_id,
+INSERT INTO TABLE ftm_ops_eqmt_stat_r1_partitioned PARTITION (rpt_mo, st_abrv) select ftm_ops_eqmt_stat_r1_id,
 sc931_ln_nbr,		
 sc755_prim_ln_nbr,		
 sc755_prim_item_id,		
@@ -43,5 +43,3 @@ rpt_dt,
 rpt_mo,		
 st_abrv	
 from prftm.ftm_ops_eqmt_stat_r1 
-
-Table name is ftm_ops_eqmt_stat_r1_partitioned
