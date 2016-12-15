@@ -1,0 +1,33 @@
+Hive Sample - TEST jdbc:hive2://xtst-xhdp001.hdp.tla.uprr.com:10000
+
+
+%jdbc(hive)
+select * from prftm.ftm_ops_rpt_cntl_eqmt_monthly where load_date='20161105' and trn_date>'2016-10-01' and trn_date<'2016-10-07'
+
+Oracle Sample - FTM prod272
+
+
+%jdbc
+select * from ftm.ftm_evnt_grp where ftm_grp_nbr between 846680469 and 846680569
+
+Teradata Sample - jdbc:teradata://EDWPRDI0.EDW.TLA.UPRR.COM
+
+
+%jdbc(teradata)
+select top 10 * from RISDVP10.RISvw105
+
+MSSQL Sample - jdbc:sqlserver://finsqlprd2.fin.tla.uprr.com:1433
+
+
+%jdbc(mssql)
+select * from haulage.dbo.tblBillControl
+
+%python
+import matplotlib.pyplot as plt
+plt.figure()
+x = [1,2,3,4,5,6,7,8]
+y = [20, 21, 20.5, 20.81, 21.0, 21.48, 22.0, 21.89]
+
+plt. plot(x, y, linestyle='dashed', marker='o', color='blue')
+zeppelin_show(plt, width='400px')
+plt.close()
