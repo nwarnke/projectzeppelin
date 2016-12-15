@@ -1,0 +1,47 @@
+%angular
+<h3>The table <i>ftm_ops_eqmt_stat_r1</i> was partitioned by rpt_mo and st_abrv and yielded the table <i>ftm_ops_eqmt_stat_r1_partitioned</i>.
+The following tests illustrate the difference in performance due to partitioning.</h3>
+
+Hive JDBC non-partitioned : 36s
+
+
+%jdbc(hive)
+select sum(stat_amt) from prftm.ftm_ops_eqmt_stat_r1 where rpt_mo = 1 and st_abrv = 'NE'
+       Toggle Dropdown
+
+Hive jdbc partitioned 12s
+
+
+%jdbc(hive)
+select sum(stat_amt) from prftm.ftm_ops_eqmt_stat_r1_partitioned where rpt_mo = 1 and st_abrv = 'NE'
+
+Non partitioned 32s
+
+
+%jdbc(hive)
+select count(*) from prftm.ftm_ops_eqmt_stat_r1
+     
+Partitioned < 1s
+
+
+%jdbc(hive)
+select count(*) from prftm.ftm_ops_eqmt_stat_r1_partitioned
+
+Non-Partitioned
+
+
+%jdbc(hive)
+select count(distinct stat_amt) from prftm.ftm_ops_eqmt_stat_r1 where rpt_mo = 2 and st_abrv = 'NE'
+
+Partitioned
+
+
+%jdbc(hive)
+select count(distinct stat_amt) from prftm.ftm_ops_eqmt_stat_r1_partitioned where rpt_mo = 2 and st_abrv = 'NE'
+
+<1s
+
+
+%jdbc(hive)
+select * from prftm.ftm_ops_eqmt_stat_r1_partitioned where r1_trn_type = 1 and st_abrv = 'CA' and sc755_prim_ln_nbr = 30
+
